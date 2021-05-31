@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MigrasiLogee": {
+      "commandName": "Project",
+      "commandLineArgs": "uptime E:\\ingress-logee.csv --mode static --ip 103.147.3.36 --curl E:\\app-store\\bin\\curl.exe"
+    }
+  }
+}

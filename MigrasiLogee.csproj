@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CsvHelper" Version="27.1.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Spectre.Console" Version="0.39.1-preview.0.31" />
+    <PackageReference Include="Spectre.Console.Extensions.Progress" Version="0.3.0" />
+    <PackageReference Include="Spectre.Console.Extensions.Table" Version="0.3.0" />
+  </ItemGroup>
+
+</Project>
