@@ -2,7 +2,7 @@
   "profiles": {
     "MigrasiLogee": {
       "commandName": "Project",
-      "commandLineArgs": "uptime E:\\ingress-logee.csv --mode static --ip 103.147.3.36 --curl E:\\app-store\\bin\\curl.exe"
+      "commandLineArgs": "dns-cutover E:\\ingress-logee-dig.csv --dig E:\\app-store\\bin\\BIND9\\dig.exe -a 180.250.117.135"
     }
   }
 }

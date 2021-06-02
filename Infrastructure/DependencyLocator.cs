@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using System;
 using System.IO;
 using MigrasiLogee.Helpers;
 
@@ -19,7 +20,7 @@ namespace MigrasiLogee.Infrastructure
                 return suppliedPath;
             }
 
-            var pathEnv = PathHelpers.GetFullPathToEnv("curl.exe");
+            var pathEnv = PathHelpers.GetFullPathToEnv(GetExtensionSuffix("curl"));
             return pathEnv;
         }
 
@@ -42,8 +43,13 @@ namespace MigrasiLogee.Infrastructure
                 return suppliedPath;
             }
 
-            var pathEnv = PathHelpers.GetFullPathToEnv("dig.exe");
+            var pathEnv = PathHelpers.GetFullPathToEnv(GetExtensionSuffix("dig"));
             return pathEnv;
+        }
+
+        private static string GetExtensionSuffix(string name)
+        {
+            return Environment.OSVersion.Platform == PlatformID.Win32NT ? name + ".exe" : name;
         }
     }
 }

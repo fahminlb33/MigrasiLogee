@@ -25,10 +25,11 @@ namespace MigrasiLogee.Pipelines
 
         [CommandOption("-i|--ip <IP>")]
         [Description("Use this IP and ignore DNS resolution to point the server")]
-        public string StaticServerAddress { get; set; }
+        public string StaticServerIp { get; set; }
 
         [CommandOption("-d|--dns <DNS>")]
         [Description("DNS server used to resolve the host, defaults to 8.8.8.8 if not specified")]
+        [DefaultValue(NetworkHelpers.DefaultDnsResolverAddress)]
         public string DnsAddress { get; set; }
 
         [CommandOption("-c|--curl <CURL_PATH>")]
@@ -38,7 +39,9 @@ namespace MigrasiLogee.Pipelines
 
     public class VerifyServiceUptimePipeline : PipelineBase<IngressServiceUptimeSettings>
     {
-        private readonly IngressChecker _ingress = new();
+        public record ServiceEntry(bool UseHttps, string HostName, string Path, string ProjectName, string IngressName);
+
+        private readonly CurlClient _ingress = new();
 
         protected override bool ValidateState(CommandContext context, IngressServiceUptimeSettings settings)
         {
@@ -66,14 +69,14 @@ namespace MigrasiLogee.Pipelines
 
             if (settings.Mode == "static")
             {
-                if (string.IsNullOrEmpty(settings.StaticServerAddress) || !IPAddress.TryParse(settings.StaticServerAddress, out var _))
+                if (string.IsNullOrEmpty(settings.StaticServerIp) || !IPAddress.TryParse(settings.StaticServerIp, out var _))
                 {
                     AnsiConsole.MarkupLine("[red]Static IP is not specified using --ip or invalid IP is entered.[/]");
                     return false;
                 }
 
                 _ingress.UseDnsResolver = false;
-                _ingress.StaticServerAddress = settings.StaticServerAddress;
+                _ingress.StaticServerIp = settings.StaticServerIp;
             }
             else if  (settings.Mode == "dynamic")
             {
@@ -83,7 +86,7 @@ namespace MigrasiLogee.Pipelines
                 }
 
                 _ingress.UseDnsResolver = true;
-                _ingress.DnsAddress = IPAddress.TryParse(settings.DnsAddress, out var _) ? settings.DnsAddress : IngressChecker.DefaultDnsResolverAddress;
+                _ingress.DnsAddress = IPAddress.TryParse(settings.DnsAddress, out var _) ? settings.DnsAddress : NetworkHelpers.DefaultDnsResolverAddress;
             }
             else
             {
@@ -103,18 +106,17 @@ namespace MigrasiLogee.Pipelines
 
             AnsiConsole.WriteLine("Use DNS resolver  : {0}", _ingress.UseDnsResolver);
             AnsiConsole.WriteLine("DNS resolver      : {0}", _ingress.DnsAddress);
-            AnsiConsole.WriteLine("Static server IP  : {0}", _ingress.StaticServerAddress);
+            AnsiConsole.WriteLine("Static server IP  : {0}", _ingress.StaticServerIp);
         }
 
         protected override int Run(CommandContext context, IngressServiceUptimeSettings settings)
         {
             using var reader = new StreamReader(settings.UrlFile);
             using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-            //csv.Context.RegisterClassMap<CsvBooleanConverter>();
 
-            var records = csv.GetRecords<IngressCheckEntry>();
-   
+            var records = csv.GetRecords<ServiceEntry>();
             var table = new Table().LeftAligned();
+
             AnsiConsole.Live(table)
                 .Overflow(VerticalOverflow.Ellipsis)
                 .Start(ctx =>
@@ -131,10 +133,11 @@ namespace MigrasiLogee.Pipelines
 
                     foreach (var entry in records)
                     {
-                        var result = _ingress.IsServiceUp(entry);
-                        var ipMarkup = result.IP.Contains("not resolve")
-                            ? $"[red]{result.IP}[/]"
-                            : result.IP;
+                        var result = _ingress.GetServiceUptime(new ServiceInfo(entry.UseHttps, entry.HostName, entry.Path));
+
+                        var ipMarkup = result.Ip.Contains("not resolve")
+                            ? $"[red]{result.Ip}[/]"
+                            : result.Ip;
                         var sslMarkup = result.SslStatus.Contains("problem") || result.SslStatus.Contains("No SSL")
                             ? $"[red]{result.SslStatus}[/]"
                             : result.SslStatus;
@@ -142,7 +145,13 @@ namespace MigrasiLogee.Pipelines
                             ? $"[green]{result.HttpCode}[/]"
                             : $"[red]{result.HttpCode}[/]";
 
-                        table.AddRow(result.Host.TrimLength(20), ipMarkup, result.Port.ToString(), result.Path, sslMarkup, httpMarkup, result.Body.Replace(Environment.NewLine, "").TrimLength(), result.Ingress);
+                        table.AddRow(result.Host.TrimLength(20), 
+                            ipMarkup,
+                            result.Port.ToString(),
+                            result.Path, sslMarkup, 
+                            httpMarkup, 
+                            result.Body.Replace(Environment.NewLine, "").TrimLength(), 
+                            $"{entry.IngressName} ({entry.ProjectName})");
                         ctx.Refresh();
                     }
                 });

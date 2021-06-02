@@ -1,4 +1,6 @@
-﻿using MigrasiLogee.Pipelines;
+﻿using System.IO;
+using System.Linq;
+using MigrasiLogee.Pipelines;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -11,6 +13,7 @@ namespace MigrasiLogee
             var app = new CommandApp();
             app.Configure(config =>
             {
+                config.AddCommand<VerifyDnsCutoverPipeline>("dns-cutover");
                 config.AddCommand<VerifyServiceUptimePipeline>("uptime");
             });
 
