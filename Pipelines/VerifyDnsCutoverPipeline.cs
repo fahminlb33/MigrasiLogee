@@ -29,15 +29,15 @@ namespace MigrasiLogee.Pipelines
         public string DnsAddress { get; set; }
 
         [CommandOption("-c|--cname <HOSTNAME>")]
-        [Description("Match the CNAME of the answer section from dig")]
+        [Description("Match the CNAME of the answer section from 'dig'")]
         public string CnameAddress { get; set; }
 
         [CommandOption("-a|--arecord <HOSTNAME>")]
-        [Description("Match the A of the answer section from dig")]
+        [Description("Match the A of the answer section from 'dig'")]
         public string AAddress { get; set; }
 
         [CommandOption("-i|--dig <CURL_PATH>")]
-        [Description("Relative/full path to dig executable (or just name if it's in PATH)")]
+        [Description("Relative/full path to 'dig' executable (or just name if it's in PATH)")]
         public string DigPath { get; set; }
     }
 

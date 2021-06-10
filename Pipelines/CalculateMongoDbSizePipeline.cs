@@ -23,7 +23,7 @@ namespace MigrasiLogee.Pipelines
         public string ProjectName { get; set; }
 
         [CommandArgument(1, "<OUTPUT_PATH>")]
-        [Description("Full path to otutput file (CSV)")]
+        [Description("Full path to output file (CSV)")]
         public string OutputPath { get; set; }
 
         [CommandOption("-p|--prefix <PREFIX>")]

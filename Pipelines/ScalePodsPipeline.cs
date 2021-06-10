@@ -32,11 +32,11 @@ namespace MigrasiLogee.Pipelines
         public string KubeconfigFile { get; set; }
 
         [CommandOption("--oc <OC_PATH>")]
-        [Description("Relative/full path to oc executable (or leave empty if it's in PATH)")]
+        [Description("Relative/full path to 'oc' executable (or leave empty if it's in PATH)")]
         public string OcPath { get; set; }
 
         [CommandOption("--kubectl <KUBECTL_PATH>")]
-        [Description("Relative/full path to kubectl executable (or leave empty if it's in PATH)")]
+        [Description("Relative/full path to 'kubectl' executable (or leave empty if it's in PATH)")]
         public string KubectlPath { get; set; }
     }
 

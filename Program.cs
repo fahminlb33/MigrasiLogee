@@ -31,7 +31,7 @@ namespace MigrasiLogee
 
             AnsiConsole.Render(new FigletText("MigrasiLogee").LeftAligned().Color(Color.DarkOrange3_1));
             AnsiConsole.WriteLine();
-            AnsiConsole.MarkupLine("MigrasiLogee - [red]MIG[/]Rasi is pa[red]IN[/].");
+            AnsiConsole.MarkupLine("MigrasiLogee - [red]MIGR[/]asi is pa[red]IN[/].");
             AnsiConsole.WriteLine();
 
             return app.Run(args);

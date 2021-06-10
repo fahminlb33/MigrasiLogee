@@ -21,7 +21,7 @@ namespace MigrasiLogee.Pipelines
 
         [CommandOption("-m|--mode <MODE>")]
         [DefaultValue("dynamic")]
-        [Description("IP resolution mode, either static or dynamic, defaults to dynamic")]
+        [Description("IP resolution mode, either 'static' or 'dynamic', defaults to dynamic")]
         public string Mode { get; set; }
 
         [CommandOption("-i|--ip <IP>")]
@@ -34,7 +34,7 @@ namespace MigrasiLogee.Pipelines
         public string DnsAddress { get; set; }
 
         [CommandOption("-c|--curl <CURL_PATH>")]
-        [Description("Relative/full path to curl executable (or just name if it's in PATH)")]
+        [Description("Relative/full path to 'curl' executable (or just name if it's in PATH)")]
         public string CurlPath { get; set; }
     }
 
