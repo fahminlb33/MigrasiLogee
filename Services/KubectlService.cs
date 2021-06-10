@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MigrasiLogee.Pipelines
+namespace MigrasiLogee.Services
 {
-    class ScaleDeploymentPipelines
+    public class KubectlService
     {
+        public string KubectlExecutable { get; set; }
     }
 }

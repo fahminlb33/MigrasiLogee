@@ -37,29 +37,29 @@ namespace MigrasiLogee.Pipelines
         public string CurlPath { get; set; }
     }
 
+    public record ServiceEntry(bool UseHttps, string HostName, string Path, string ProjectName, string IngressName);
+
     public class VerifyServiceUptimePipeline : PipelineBase<IngressServiceUptimeSettings>
     {
-        public record ServiceEntry(bool UseHttps, string HostName, string Path, string ProjectName, string IngressName);
-
-        private readonly CurlClient _ingress = new();
+        private readonly CurlClient _curl = new();
 
         protected override bool ValidateState(CommandContext context, IngressServiceUptimeSettings settings)
         {
-            var curlPath = DependencyLocator.WhereCurl(settings.CurlPath);
+            var curlPath = DependencyLocator.WhereExecutable(settings.CurlPath, "curl");
             if (curlPath == null)
             {
                 AnsiConsole.MarkupLine("[red]cURL not found! Add curl to your PATH or specify the path using --curl option.[/]");
                 return false;
             }
 
-            if (!DependencyLocator.IsCurlSupported(curlPath))
+            _curl.CurlExecutablePath = curlPath;
+
+            if (!_curl.IsCurlSupported())
             {
                 AnsiConsole.MarkupLine($"[red]{curlPath}[/]");
                 AnsiConsole.MarkupLine("[red]Current cURL version is not supported, please update your cURL (--dns-server feature is not available)[/]");
                 return false;
             }
-
-            _ingress.CurlExecutablePath = curlPath;
 
             if (!DependencyLocator.IsFileExists(settings.UrlFile))
             {
@@ -75,8 +75,8 @@ namespace MigrasiLogee.Pipelines
                     return false;
                 }
 
-                _ingress.UseDnsResolver = false;
-                _ingress.StaticServerIp = settings.StaticServerIp;
+                _curl.UseDnsResolver = false;
+                _curl.StaticServerIp = settings.StaticServerIp;
             }
             else if  (settings.Mode == "dynamic")
             {
@@ -85,8 +85,8 @@ namespace MigrasiLogee.Pipelines
                     AnsiConsole.MarkupLine("[yellow]DNS IP is not specified using --dns or invalid IP is entered. Using 8.8.8.8 as DNS resolver.[/]");
                 }
 
-                _ingress.UseDnsResolver = true;
-                _ingress.DnsAddress = IPAddress.TryParse(settings.DnsAddress, out var _) ? settings.DnsAddress : NetworkHelpers.DefaultDnsResolverAddress;
+                _curl.UseDnsResolver = true;
+                _curl.DnsAddress = IPAddress.TryParse(settings.DnsAddress, out var _) ? settings.DnsAddress : NetworkHelpers.DefaultDnsResolverAddress;
             }
             else
             {
@@ -100,13 +100,13 @@ namespace MigrasiLogee.Pipelines
         protected override void PreRun(CommandContext context, IngressServiceUptimeSettings settings)
         {
             AnsiConsole.WriteLine();
-            AnsiConsole.Render(new Text("{ Ingress Route Checker }").Centered());
+            AnsiConsole.Render(new Text("{ Service Uptime }").Centered());
             AnsiConsole.WriteLine();
             AnsiConsole.WriteLine();
 
-            AnsiConsole.WriteLine("Use DNS resolver  : {0}", _ingress.UseDnsResolver);
-            AnsiConsole.WriteLine("DNS resolver      : {0}", _ingress.DnsAddress);
-            AnsiConsole.WriteLine("Static server IP  : {0}", _ingress.StaticServerIp);
+            AnsiConsole.WriteLine("Use DNS resolver  : {0}", _curl.UseDnsResolver);
+            AnsiConsole.WriteLine("DNS resolver      : {0}", _curl.DnsAddress);
+            AnsiConsole.WriteLine("Static server IP  : {0}", _curl.StaticServerIp);
         }
 
         protected override int Run(CommandContext context, IngressServiceUptimeSettings settings)
@@ -133,7 +133,7 @@ namespace MigrasiLogee.Pipelines
 
                     foreach (var entry in records)
                     {
-                        var result = _ingress.GetServiceUptime(new ServiceInfo(entry.UseHttps, entry.HostName, entry.Path));
+                        var result = _curl.GetServiceUptime(new ServiceInfo(entry.UseHttps, entry.HostName, entry.Path));
 
                         var ipMarkup = result.Ip.Contains("not resolve")
                             ? $"[red]{result.Ip}[/]"

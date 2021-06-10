@@ -11,5 +11,10 @@
 
             return s.Length <= maxLength ? s : s.Substring(0, maxLength) + "...";
         }
+
+        public static int ParseInt(string s)
+        {
+            return string.IsNullOrWhiteSpace(s) ? 0 : int.Parse(s);
+        }
     }
 }

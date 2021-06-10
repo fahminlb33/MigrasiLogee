@@ -48,7 +48,7 @@ namespace MigrasiLogee.Pipelines
 
         protected override bool ValidateState(CommandContext context, VerifyDnsCutoverSettings settings)
         {
-            var digPath = DependencyLocator.WhereDig(settings.DigPath);
+            var digPath = DependencyLocator.WhereExecutable(settings.DigPath, "dig");
             if (digPath == null)
             {
                 AnsiConsole.MarkupLine("[red]dig not found! Add dig to your PATH or specify the path using --curl option.[/]");
@@ -88,11 +88,12 @@ namespace MigrasiLogee.Pipelines
         protected override void PreRun(CommandContext context, VerifyDnsCutoverSettings settings)
         {
             AnsiConsole.WriteLine();
-            AnsiConsole.Render(new Text("{ DNS Cutover Checker }").Centered());
+            AnsiConsole.Render(new Text("{ DNS Propagation }").Centered());
             AnsiConsole.WriteLine();
             AnsiConsole.WriteLine();
 
             AnsiConsole.WriteLine("DNS resolver  : {0}", _digClient.DnsAddress);
+            AnsiConsole.WriteLine();
         }
 
         protected override int Run(CommandContext context, VerifyDnsCutoverSettings settings)
@@ -148,7 +149,7 @@ namespace MigrasiLogee.Pipelines
             return 0;
         }
 
-        private bool GetPropagationStatus(DnsPropagation propagation, VerifyDnsCutoverSettings setting)
+        private static bool GetPropagationStatus(DnsPropagation propagation, VerifyDnsCutoverSettings setting)
         {
             return propagation.Records.Any(x =>
             {

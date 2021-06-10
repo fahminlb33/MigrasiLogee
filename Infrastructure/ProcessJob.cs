@@ -104,6 +104,7 @@ namespace MigrasiLogee.Infrastructure
             }
 
             _resetEvent?.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         private void AttachJobObject()

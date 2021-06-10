@@ -28,6 +28,18 @@ namespace MigrasiLogee.Services
                 RegexOptions.Compiled);
         }
 
+        public bool IsCurlSupported()
+        {
+            using var job = new ProcessJob
+            {
+                ExecutableName = CurlExecutablePath,
+                Arguments = $"--dns-servers {DnsAddress} google.com"
+            };
+
+            var result = job.StartWaitWithRedirect();
+            return result.ExitCode == 0;
+        }
+
         public ServiceUptime GetServiceUptime(ServiceInfo info)
         {
             var port = info.UseHttps ? NetworkHelpers.HttpsPort : NetworkHelpers.HttpPort;
@@ -75,6 +87,5 @@ namespace MigrasiLogee.Services
                     "");
             }
         }
-        
     }
 }

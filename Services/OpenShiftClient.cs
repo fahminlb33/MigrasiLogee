@@ -30,6 +30,20 @@ namespace MigrasiLogee.Services
                 .Select(NormalizePodName);
         }
 
+        public bool Scale(string deployment, int replicas)
+        {
+            using var process = new ProcessJob
+            {
+                ExecutableName = OcExecutable,
+                Arguments = $"oc scale --replicas={replicas} dc {deployment}"
+            };
+
+            var (output, error, _) = process.StartWaitWithRedirect();
+            ValidateOutput(error);
+
+            return output.Contains("scaled");
+        }
+
         public ProcessJob PortForward(string podName, int localPort, int remotePort)
         {
             var process = new ProcessJob
@@ -39,7 +53,8 @@ namespace MigrasiLogee.Services
             };
 
             process.StartJob();
-            Thread.Sleep(1000);
+
+            Thread.Sleep(2000);
             process.EnsureStarted();
 
             return process;
@@ -89,7 +104,7 @@ namespace MigrasiLogee.Services
                 .Remove(0, 1);
         }
 
-        private void ValidateOutput(string output)
+        private static void ValidateOutput(string output)
         {
             if (output.Contains("Error from server"))
             {

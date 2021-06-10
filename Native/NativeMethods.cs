@@ -3,19 +3,19 @@ using System.Runtime.InteropServices;
 
 namespace MigrasiLogee.Native
 {
-    public class NativeMethods
+    internal class NativeMethods
     {
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-        public static extern SafeJobObjectHandle CreateJobObject(IntPtr a, string lpName);
+        internal static extern SafeJobObjectHandle CreateJobObject(IntPtr a, string lpName);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool SetInformationJobObject(SafeJobObjectHandle hJob, JobObjectInfoType infoType, IntPtr lpJobObjectInfo, UInt32 cbJobObjectInfoLength);
+        internal static extern bool SetInformationJobObject(SafeJobObjectHandle hJob, JobObjectInfoType infoType, IntPtr lpJobObjectInfo, UInt32 cbJobObjectInfoLength);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool AssignProcessToJobObject(SafeJobObjectHandle job, IntPtr process);
+        internal static extern bool AssignProcessToJobObject(SafeJobObjectHandle job, IntPtr process);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool CloseHandle(IntPtr hObject);
+        internal static extern bool CloseHandle(IntPtr hObject);
     }
 }
