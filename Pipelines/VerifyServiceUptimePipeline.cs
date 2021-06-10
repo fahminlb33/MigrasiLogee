@@ -6,6 +6,7 @@ using System.Net;
 using CsvHelper;
 using MigrasiLogee.Helpers;
 using MigrasiLogee.Infrastructure;
+using MigrasiLogee.Models;
 using MigrasiLogee.Services;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -36,8 +37,6 @@ namespace MigrasiLogee.Pipelines
         [Description("Relative/full path to curl executable (or just name if it's in PATH)")]
         public string CurlPath { get; set; }
     }
-
-    public record ServiceEntry(bool UseHttps, string HostName, string Path, string ProjectName, string IngressName);
 
     public class VerifyServiceUptimePipeline : PipelineBase<IngressServiceUptimeSettings>
     {
@@ -114,7 +113,7 @@ namespace MigrasiLogee.Pipelines
             using var reader = new StreamReader(settings.UrlFile);
             using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
 
-            var records = csv.GetRecords<ServiceEntry>();
+            var records = csv.GetRecords<ServiceUptimeRecord>();
             var table = new Table().LeftAligned();
 
             AnsiConsole.Live(table)

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using CsvHelper;
 using MigrasiLogee.Helpers;
 using MigrasiLogee.Infrastructure;
+using MigrasiLogee.Models;
 using MigrasiLogee.Services;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -42,8 +43,6 @@ namespace MigrasiLogee.Pipelines
 
     public class VerifyDnsCutoverPipeline : PipelineBase<VerifyDnsCutoverSettings>
     {
-        public record ServiceEntry(string Hostname, string ProjectName, string IngressName);
-
         private readonly DigClient _digClient = new();
 
         protected override bool ValidateState(CommandContext context, VerifyDnsCutoverSettings settings)
@@ -101,7 +100,7 @@ namespace MigrasiLogee.Pipelines
             using var reader = new StreamReader(settings.UrlFile);
             using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
 
-            var records = csv.GetRecords<ServiceEntry>().ToList();
+            var records = csv.GetRecords<DnsCutoverRecord>().ToList();
             var table = new Table().LeftAligned();
 
             AnsiConsole.Live(table)

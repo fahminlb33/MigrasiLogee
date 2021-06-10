@@ -42,7 +42,7 @@ namespace MigrasiLogee.Pipelines
 
     public class ScalePodsPipeline : PipelineBase<ScalePodsSettings>
     {
-        private readonly KubectlService _kubectl = new();
+        private readonly KubectlClient _kubectl = new();
         private readonly OpenShiftClient _oc = new();
 
         protected override bool ValidateState(CommandContext context, ScalePodsSettings settings)

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MigrasiLogee.Services
 {
-    public class KubectlService
+    public class KubectlClient
     {
         public string KubectlExecutable { get; set; }
     }
