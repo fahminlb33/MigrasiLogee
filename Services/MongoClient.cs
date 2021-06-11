@@ -33,11 +33,11 @@ namespace MigrasiLogee.Services
             using var process = new ProcessJob
             {
                 ExecutableName = MongoExecutable,
-                Arguments = BuildMongoCommand(host, 
-                    null, 
-                    AdminUser, 
-                    secret.AdminPassword, 
-                    AdminDatabase, 
+                Arguments = BuildMongoCommand(host,
+                    null,
+                    AdminUser,
+                    secret.AdminPassword,
+                    AdminDatabase,
                     "db.runCommand('ping')")
             };
 
@@ -50,11 +50,11 @@ namespace MigrasiLogee.Services
             using var process = new ProcessJob
             {
                 ExecutableName = MongoExecutable,
-                Arguments = BuildMongoCommand(host, 
-                    null, 
-                    AdminUser, 
-                    secret.AdminPassword, 
-                    AdminDatabase, 
+                Arguments = BuildMongoCommand(host,
+                    null,
+                    AdminUser,
+                    secret.AdminPassword,
+                    AdminDatabase,
                     "db.getMongo().getDBNames()")
             };
 
@@ -124,28 +124,57 @@ namespace MigrasiLogee.Services
             return int.Parse(standardOutput);
         }
 
+        public void DumpDatabase(string host, MongoSecret secret, string databaseName, string outputPath)
+        {
+            using var process = new ProcessJob
+            {
+                ExecutableName = MongoDumpExecutableName,
+                Arguments = BuildMongoDumpCommand(host, databaseName, AdminUser, secret.AdminPassword, AdminDatabase, outputPath)
+            };
+
+            var (standardOutput, standardError, _) = process.StartWaitWithRedirect();
+            ValidateOutput(standardOutput);
+            ValidateOutput(standardError);
+        }
+
         public static MongoSecret ParseSecret(IDictionary<string, string> dict)
         {
             return new(dict["MONGODB_USER"], dict["MONGODB_PASSWORD"], dict["MONGODB_ADMIN_PASSWORD"]);
         }
 
+        #region Private Methods
+
+        private static string BuildMongoAuthCommand(string host, string username, string password, string authenticationDatabase)
+        {
+            return $"--host {host} -u {username} -p {password} --authenticationDatabase {authenticationDatabase}";
+        }
+
         private static string BuildMongoCommand(string host, string databaseName, string username, string password, string authenticationDatabase, string eval)
         {
             databaseName = string.IsNullOrWhiteSpace(databaseName) ? "" : databaseName + " ";
-            return $"{databaseName}--host {host} -u {username} -p {password} --authenticationDatabase {authenticationDatabase} --eval \"{eval}\" --quiet";
+            var auth = BuildMongoAuthCommand(host, username, password, authenticationDatabase);
+            return $"{databaseName}{auth} --eval \"{eval}\" --quiet";
+        }
+
+        private static string BuildMongoDumpCommand(string host, string databaseName, string username, string password, string authenticationDatabase, string outputPath)
+        {
+            var auth = BuildMongoAuthCommand(host, username, password, authenticationDatabase);
+            return $"{auth} --db {databaseName} --out=\"{outputPath}\"";
         }
 
         private static void ValidateOutput(string output)
         {
-            if (output.Contains("SocketException"))
+            if (output.ToLowerInvariant().Contains("socketexception"))
             {
                 throw new MongoConnectionError(output);
             }
 
-            if (output.Contains("Error"))
+            if (output.ToLowerInvariant().Contains("error"))
             {
                 throw new MongoException(output);
             }
-        }
+        } 
+
+        #endregion
     }
 }
