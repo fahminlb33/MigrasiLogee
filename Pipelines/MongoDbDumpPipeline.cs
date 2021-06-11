@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using MigrasiLogee.Helpers;
 using MigrasiLogee.Infrastructure;
 using MigrasiLogee.Services;
@@ -41,7 +38,7 @@ namespace MigrasiLogee.Pipelines
         public string MongoDumpPath { get; set; }
     }
 
-    public class DumpMongoDbPipeline : PipelineBase<DumpMongoDbSettings>
+    public class MongoDbDumpPipeline : PipelineBase<DumpMongoDbSettings>
     {
         private readonly OpenShiftClient _oc = new();
         private readonly MongoClient _mongo = new();

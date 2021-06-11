@@ -40,7 +40,7 @@ namespace MigrasiLogee.Pipelines
         public string MongoPath { get; set; }
     }
 
-    public class CalculateMongoDbSizePipeline : PipelineBase<CalculateMongoDbSizeSettings>
+    public class MongoDbSizePipeline : PipelineBase<CalculateMongoDbSizeSettings>
     {
         private readonly OpenShiftClient _oc = new();
         private readonly MongoClient _mongo = new();

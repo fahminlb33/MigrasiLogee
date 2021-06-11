@@ -13,7 +13,7 @@ using Spectre.Console.Cli;
 
 namespace MigrasiLogee.Pipelines
 {
-    public class IngressServiceUptimeSettings : CommandSettings
+    public class ServiceUptimeSettings : CommandSettings
     {
         [CommandArgument(0, "<URL_FILE>")]
         [Description("CSV file containing hostname and path to be checked")]
@@ -38,11 +38,11 @@ namespace MigrasiLogee.Pipelines
         public string CurlPath { get; set; }
     }
 
-    public class VerifyServiceUptimePipeline : PipelineBase<IngressServiceUptimeSettings>
+    public class ServiceUptimePipeline : PipelineBase<ServiceUptimeSettings>
     {
         private readonly CurlClient _curl = new();
 
-        protected override bool ValidateState(CommandContext context, IngressServiceUptimeSettings settings)
+        protected override bool ValidateState(CommandContext context, ServiceUptimeSettings settings)
         {
             var curlPath = DependencyLocator.WhereExecutable(settings.CurlPath, CurlClient.CurlExecutableName);
             if (curlPath == null)
@@ -96,7 +96,7 @@ namespace MigrasiLogee.Pipelines
             return true;
         }
 
-        protected override void PreRun(CommandContext context, IngressServiceUptimeSettings settings)
+        protected override void PreRun(CommandContext context, ServiceUptimeSettings settings)
         {
             AnsiConsole.WriteLine();
             AnsiConsole.Render(new Text("{ Service Uptime }").Centered());
@@ -108,7 +108,7 @@ namespace MigrasiLogee.Pipelines
             AnsiConsole.WriteLine("Static server IP  : {0}", _curl.StaticServerIp);
         }
 
-        protected override int Run(CommandContext context, IngressServiceUptimeSettings settings)
+        protected override int Run(CommandContext context, ServiceUptimeSettings settings)
         {
             using var reader = new StreamReader(settings.UrlFile);
             using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);

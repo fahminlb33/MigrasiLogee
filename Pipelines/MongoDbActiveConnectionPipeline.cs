@@ -29,7 +29,7 @@ namespace MigrasiLogee.Pipelines
         public string MongoPath { get; set; }
     }
 
-    public class GetMongoDbActiveConnectionPipeline : PipelineBase<GetMongoDbActiveConnectionSettings>
+    public class MongoDbActiveConnectionPipeline : PipelineBase<GetMongoDbActiveConnectionSettings>
     {
         private readonly OpenShiftClient _oc = new();
         private readonly MongoClient _mongo = new();

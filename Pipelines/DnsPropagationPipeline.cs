@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using CsvHelper;
 using MigrasiLogee.Helpers;
 using MigrasiLogee.Infrastructure;
@@ -29,11 +25,11 @@ namespace MigrasiLogee.Pipelines
         public string DnsAddress { get; set; }
 
         [CommandOption("-c|--cname <HOSTNAME>")]
-        [Description("Match the CNAME of the answer section from 'dig'")]
+        [Description("Match the CNAME of the answer section from '" + DigClient.DigExecutableName + "'")]
         public string CnameAddress { get; set; }
 
         [CommandOption("-a|--arec <HOSTNAME>")]
-        [Description("Match the A of the answer section from 'dig'")]
+        [Description("Match the A of the answer section from '" + DigClient.DigExecutableName + "'")]
         public string AAddress { get; set; }
 
         [CommandOption("-i|--dig <CURL_PATH>")]
@@ -41,7 +37,7 @@ namespace MigrasiLogee.Pipelines
         public string DigPath { get; set; }
     }
 
-    public class VerifyDnsCutoverPipeline : PipelineBase<VerifyDnsCutoverSettings>
+    public class DnsPropagationPipeline : PipelineBase<VerifyDnsCutoverSettings>
     {
         private readonly DigClient _digClient = new();
 
