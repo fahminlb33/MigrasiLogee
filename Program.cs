@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿#if DEBUG
+using System.Diagnostics;
+#endif
 using MigrasiLogee.Pipelines;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -9,7 +11,9 @@ namespace MigrasiLogee
     {
         static int Main(string[] args)
         {
+            #if DEBUG
             Debugger.Launch();
+            #endif
 
             var app = new CommandApp();
             app.Configure(config =>
