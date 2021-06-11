@@ -13,6 +13,9 @@ namespace MigrasiLogee.Services
 
     public class MongoClient
     {
+        public const string MongoExecutableName = "mongo";
+        public const string MongoDumpExecutableName = "mongodump";
+
         public const string AdminUser = "admin";
         public const string AdminDatabase = "admin";
         public static readonly string[] InternalDatabase = { "admin", "local", "config" };

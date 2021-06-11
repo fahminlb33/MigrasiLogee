@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using CsvHelper;
+using MigrasiLogee.Helpers;
 using MigrasiLogee.Infrastructure;
 using MigrasiLogee.Models;
 using MigrasiLogee.Services;
@@ -31,11 +32,11 @@ namespace MigrasiLogee.Pipelines
         public string Prefix { get; set; }
 
         [CommandOption("--oc <OC_PATH>")]
-        [Description("Relative/full path to 'oc' executable (or leave empty if it's in PATH)")]
+        [Description("Relative/full path to '" + OpenShiftClient.OcExecutableName + "' executable (or leave empty if it's in PATH)")]
         public string OcPath { get; set; }
 
         [CommandOption("--mongo <MONGO_PATH>")]
-        [Description("Relative/full path to 'mongo' executable (or leave empty if it's in PATH)")]
+        [Description("Relative/full path to '" + MongoClient.MongoDumpExecutableName + "' executable (or leave empty if it's in PATH)")]
         public string MongoPath { get; set; }
     }
 
@@ -52,25 +53,25 @@ namespace MigrasiLogee.Pipelines
         {
             if (string.IsNullOrWhiteSpace(settings.ProjectName))
             {
-                AnsiConsole.MarkupLine("[yellow]No project name is specified.[/]");
+                MessageWriter.ArgumentNotSpecifiedMessage("<PROJECT_NAME>");
                 return false;
             }
 
             _oc.ProjectName = settings.ProjectName;
 
-            var ocPath = DependencyLocator.WhereExecutable(settings.OcPath, "oc");
+            var ocPath = DependencyLocator.WhereExecutable(settings.OcPath, OpenShiftClient.OcExecutableName);
             if (ocPath == null)
             {
-                AnsiConsole.MarkupLine("[red]oc not found! Add oc to your PATH or specify the path using --oc option.[/]");
+                MessageWriter.ExecutableNotFoundMessage(OpenShiftClient.OcExecutableName, "--oc");
                 return false;
             }
 
             _oc.OcExecutable = ocPath;
 
-            var mongoPath = DependencyLocator.WhereExecutable(settings.MongoPath, "mongo");
+            var mongoPath = DependencyLocator.WhereExecutable(settings.MongoPath, MongoClient.MongoExecutableName);
             if (mongoPath == null)
             {
-                AnsiConsole.MarkupLine("[red]mongo not found! Add mongo to your PATH or specify the path using --mongo option.[/]");
+                MessageWriter.ExecutableNotFoundMessage(MongoClient.MongoExecutableName, "--mongo");
                 return false;
             }
 
@@ -85,7 +86,7 @@ namespace MigrasiLogee.Pipelines
             AnsiConsole.Render(new Text("{ MongoDB Collection Size Measurement }").Centered());
             AnsiConsole.WriteLine();
             AnsiConsole.WriteLine();
-            
+
             AnsiConsole.WriteLine("Project : {0}", settings.ProjectName);
             AnsiConsole.WriteLine("Save to : {0}", settings.OutputPath);
             AnsiConsole.WriteLine();
@@ -121,7 +122,7 @@ namespace MigrasiLogee.Pipelines
                     if (!isMongoUp) Thread.Sleep(1000);
                     checkCount++;
                 } while (!isMongoUp && checkCount < 3);
-                
+
                 if (!isMongoUp)
                 {
                     Console.WriteLine($"Skipping pod {pod} because port-forward can't be made or mongo cannot connect to pod.");

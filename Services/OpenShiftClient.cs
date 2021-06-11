@@ -11,6 +11,8 @@ namespace MigrasiLogee.Services
 {
     public class OpenShiftClient
     {
+        public const string OcExecutableName = "oc";
+
         public string OcExecutable { get; set; }
         public string ProjectName { get; set; }
 

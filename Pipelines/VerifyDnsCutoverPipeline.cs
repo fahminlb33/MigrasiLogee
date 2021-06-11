@@ -32,12 +32,12 @@ namespace MigrasiLogee.Pipelines
         [Description("Match the CNAME of the answer section from 'dig'")]
         public string CnameAddress { get; set; }
 
-        [CommandOption("-a|--arecord <HOSTNAME>")]
+        [CommandOption("-a|--arec <HOSTNAME>")]
         [Description("Match the A of the answer section from 'dig'")]
         public string AAddress { get; set; }
 
         [CommandOption("-i|--dig <CURL_PATH>")]
-        [Description("Relative/full path to 'dig' executable (or just name if it's in PATH)")]
+        [Description("Relative/full path to '" + DigClient.DigExecutableName + "' executable (or leave empty if it's in PATH)")]
         public string DigPath { get; set; }
     }
 
@@ -47,10 +47,10 @@ namespace MigrasiLogee.Pipelines
 
         protected override bool ValidateState(CommandContext context, VerifyDnsCutoverSettings settings)
         {
-            var digPath = DependencyLocator.WhereExecutable(settings.DigPath, "dig");
+            var digPath = DependencyLocator.WhereExecutable(settings.DigPath, DigClient.DigExecutableName);
             if (digPath == null)
             {
-                AnsiConsole.MarkupLine("[red]dig not found! Add dig to your PATH or specify the path using --curl option.[/]");
+                MessageWriter.ExecutableNotFoundMessage(DigClient.DigExecutableName, "--dig");
                 return false;
             }
 
@@ -140,7 +140,7 @@ namespace MigrasiLogee.Pipelines
                                 propagationMarkup,
                                 entry.IngressName);
                         }
-                        
+
                         ctx.Refresh();
                     }
                 });

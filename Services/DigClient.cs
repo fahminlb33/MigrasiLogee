@@ -13,6 +13,8 @@ namespace MigrasiLogee.Services
 
     public class DigClient
     {
+        public const string DigExecutableName = "dig";
+
         public string DnsAddress { get; set; }
         public string DigExecutablePath { get; set; }
 

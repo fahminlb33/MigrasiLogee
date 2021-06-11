@@ -34,7 +34,7 @@ namespace MigrasiLogee.Pipelines
         public string DnsAddress { get; set; }
 
         [CommandOption("-c|--curl <CURL_PATH>")]
-        [Description("Relative/full path to 'curl' executable (or just name if it's in PATH)")]
+        [Description("Relative/full path to '" + CurlClient.CurlExecutableName + "' executable (or leave empty if it's in PATH)")]
         public string CurlPath { get; set; }
     }
 
@@ -44,10 +44,10 @@ namespace MigrasiLogee.Pipelines
 
         protected override bool ValidateState(CommandContext context, IngressServiceUptimeSettings settings)
         {
-            var curlPath = DependencyLocator.WhereExecutable(settings.CurlPath, "curl");
+            var curlPath = DependencyLocator.WhereExecutable(settings.CurlPath, CurlClient.CurlExecutableName);
             if (curlPath == null)
             {
-                AnsiConsole.MarkupLine("[red]cURL not found! Add curl to your PATH or specify the path using --curl option.[/]");
+                MessageWriter.ExecutableNotFoundMessage(CurlClient.CurlExecutableName, "--curl");
                 return false;
             }
 
@@ -77,7 +77,7 @@ namespace MigrasiLogee.Pipelines
                 _curl.UseDnsResolver = false;
                 _curl.StaticServerIp = settings.StaticServerIp;
             }
-            else if  (settings.Mode == "dynamic")
+            else if (settings.Mode == "dynamic")
             {
                 if (string.IsNullOrEmpty(settings.DnsAddress) || !IPAddress.TryParse(settings.DnsAddress, out var _))
                 {
@@ -144,12 +144,12 @@ namespace MigrasiLogee.Pipelines
                             ? $"[green]{result.HttpCode}[/]"
                             : $"[red]{result.HttpCode}[/]";
 
-                        table.AddRow(result.Host.TrimLength(20), 
+                        table.AddRow(result.Host.TrimLength(20),
                             ipMarkup,
                             result.Port.ToString(),
-                            result.Path, sslMarkup, 
-                            httpMarkup, 
-                            result.Body.Replace(Environment.NewLine, "").TrimLength(), 
+                            result.Path, sslMarkup,
+                            httpMarkup,
+                            result.Body.Replace(Environment.NewLine, "").TrimLength(),
                             $"{entry.IngressName} ({entry.ProjectName})");
                         ctx.Refresh();
                     }

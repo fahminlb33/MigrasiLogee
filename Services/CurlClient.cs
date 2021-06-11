@@ -13,6 +13,8 @@ namespace MigrasiLogee.Services
 
     public class CurlClient
     {
+        public const string CurlExecutableName = "curl";
+
         private readonly Regex _httpCodeRegex;
         private readonly Regex _hostResolveRegex;
 
