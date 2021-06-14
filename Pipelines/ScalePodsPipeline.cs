@@ -67,7 +67,7 @@ namespace MigrasiLogee.Pipelines
 
             if (string.IsNullOrWhiteSpace(settings.Prefix))
             {
-                AnsiConsole.MarkupLine("[yellow]No prefix is specified, all pods will be scaled.[/]");
+                AnsiConsole.MarkupLine("[yellow]No prefix is specified, all deployments will be scaled.[/]");
             }
 
             if (settings.Mode == "oc")
