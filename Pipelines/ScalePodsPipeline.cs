@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using MigrasiLogee.Helpers;
 using MigrasiLogee.Infrastructure;
 using MigrasiLogee.Services;
 using Spectre.Console;
@@ -10,7 +13,7 @@ namespace MigrasiLogee.Pipelines
     public class ScalePodsSettings : CommandSettings
     {
         [CommandArgument(0, "<PROJECT_NAME>")]
-        [Description("Project name containing deployments to scale")]
+        [Description("Namespace/project name containing deployments to scale")]
         public string ProjectName { get; set; }
 
         [CommandOption("-m|--mode <MODE>")]
@@ -49,11 +52,12 @@ namespace MigrasiLogee.Pipelines
         {
             if (string.IsNullOrWhiteSpace(settings.ProjectName))
             {
-                AnsiConsole.MarkupLine("[yellow]No project name is specified.[/]");
+                MessageWriter.ArgumentNotSpecifiedMessage("<PROJECT_NAME>");
                 return false;
             }
 
             _oc.ProjectName = settings.ProjectName;
+            _kubectl.NamespaceName = settings.ProjectName;
 
             if (settings.Replicas < 0)
             {
@@ -64,15 +68,14 @@ namespace MigrasiLogee.Pipelines
             if (string.IsNullOrWhiteSpace(settings.Prefix))
             {
                 AnsiConsole.MarkupLine("[yellow]No prefix is specified, all pods will be scaled.[/]");
-                return false;
             }
 
             if (settings.Mode == "oc")
             {
-                var ocPath = DependencyLocator.WhereExecutable(settings.OcPath, "oc");
+                var ocPath = DependencyLocator.WhereExecutable(settings.OcPath, OpenShiftClient.OcExecutableName);
                 if (ocPath == null)
                 {
-                    AnsiConsole.MarkupLine("[red]oc not found! Add dig to your PATH or specify the path using --oc option.[/]");
+                    MessageWriter.ExecutableNotFoundMessage(OpenShiftClient.OcExecutableName, "--oc");
                     return false;
                 }
 
@@ -80,10 +83,10 @@ namespace MigrasiLogee.Pipelines
             }
             else if (settings.Mode == "k3s")
             {
-                var kubectlPath = DependencyLocator.WhereExecutable(settings.KubectlPath, "kubectl");
+                var kubectlPath = DependencyLocator.WhereExecutable(settings.KubectlPath, KubectlClient.KubectlExecutableName);
                 if (kubectlPath == null)
                 {
-                    AnsiConsole.MarkupLine("[red]kubectl not found! Add dig to your PATH or specify the path using --kubectl option.[/]");
+                    MessageWriter.ExecutableNotFoundMessage(KubectlClient.KubectlExecutableName, "--kubectl");
                     return false;
                 }
 
@@ -94,6 +97,8 @@ namespace MigrasiLogee.Pipelines
                     AnsiConsole.MarkupLine("[red]Kubeconfig file not found! Specify the path using --kubeconfig option.[/]");
                     return false;
                 }
+
+                _kubectl.KubeconfigFilePath = settings.KubeconfigFile;
             }
             else
             {
@@ -117,7 +122,59 @@ namespace MigrasiLogee.Pipelines
 
         protected override int Run(CommandContext context, ScalePodsSettings settings)
         {
-            throw new NotImplementedException();
+            AnsiConsole.WriteLine("Discovering deployments...");
+            var deployments = InternalGetDeployments(settings)
+                .Where(x => string.IsNullOrWhiteSpace(settings.Prefix) || x.Contains(settings.Prefix))
+                .ToList();
+
+            AnsiConsole.MarkupLine($"Found [yellow]{deployments.Count}[/] deployments.");
+
+            var table = new Table().LeftAligned();
+            AnsiConsole.Live(table)
+                .Overflow(VerticalOverflow.Ellipsis)
+                .Start(ctx =>
+                {
+                    table.AddColumn("Deployment");
+                    table.AddColumn("Replicas");
+                    table.AddColumn("Status");
+                    ctx.Refresh();
+
+                    foreach (var deployment in deployments)
+                    {
+                        string statusMarkup;
+                        try
+                        {
+                            InternalScale(settings, deployment);
+                            statusMarkup = "[green]OK[/]";
+                        }
+                        catch (Exception e)
+                        {
+                            statusMarkup = $"[red]{e.Message.TrimLength(20)}[/]";
+                        }
+
+                        table.AddRow(deployment, settings.Replicas.ToString(), statusMarkup);
+                        ctx.Refresh();
+                    }
+                });
+
+            return 0;
+        }
+
+        private IEnumerable<string> InternalGetDeployments(ScalePodsSettings settings)
+        {
+            return settings.Mode == "oc" ? _oc.GetDeploymentNames() : _kubectl.GetDeploymentNames();
+        }
+
+        private void InternalScale(ScalePodsSettings settings, string deploymentName)
+        {
+            if (settings.Mode == "oc")
+            {
+                _oc.Scale(deploymentName, settings.Replicas);
+            }
+            else
+            {
+                _kubectl.Scale(deploymentName, settings.Replicas);
+            }
         }
     }
 }

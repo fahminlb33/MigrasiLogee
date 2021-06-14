@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using MigrasiLogee.Exceptions;
+using MigrasiLogee.Helpers;
 using MigrasiLogee.Infrastructure;
 using Newtonsoft.Json.Linq;
 
@@ -27,9 +28,27 @@ namespace MigrasiLogee.Services
             var (output, error, _) = process.StartWaitWithRedirect();
             ValidateOutput(error);
 
-            return output.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
+            return output.Split(StringHelpers.NewlineCharacters, StringSplitOptions.None)
                 .Where(x => !string.IsNullOrWhiteSpace(x))
-                .Select(NormalizePodName);
+                .Select(StringHelpers.NormalizeKubeResourceName)
+                .ToList();
+        }
+
+        public IEnumerable<string> GetDeploymentNames()
+        {
+            using var process = new ProcessJob
+            {
+                ExecutableName = OcExecutable,
+                Arguments = $"get dc -o name -n {ProjectName}"
+            };
+
+            var (output, error, _) = process.StartWaitWithRedirect();
+            ValidateOutput(error);
+
+            return output.Split(StringHelpers.NewlineCharacters, StringSplitOptions.None)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(StringHelpers.NormalizeKubeResourceName)
+                .ToList();
         }
 
         public bool Scale(string deployment, int replicas)
@@ -37,7 +56,7 @@ namespace MigrasiLogee.Services
             using var process = new ProcessJob
             {
                 ExecutableName = OcExecutable,
-                Arguments = $"oc scale --replicas={replicas} dc {deployment}"
+                Arguments = $"scale -n {ProjectName} --replicas={replicas} dc {deployment}"
             };
 
             var (output, error, _) = process.StartWaitWithRedirect();
@@ -90,11 +109,6 @@ namespace MigrasiLogee.Services
             return JToken.Parse(output)["data"]
                 ?.ToObject<Dictionary<string, string>>()
                 ?.ToDictionary(x => x.Key, y => Encoding.UTF8.GetString(Convert.FromBase64String(y.Value)));
-        }
-
-        public static string NormalizePodName(string podName)
-        {
-            return podName.Remove(0, 5);
         }
 
         public static string PodToServiceName(string normalizedPodName)

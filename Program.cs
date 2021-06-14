@@ -21,7 +21,9 @@ namespace MigrasiLogee
             {
                 config.SetApplicationName("migrain");
                 config.AddCommand<ScalePodsPipeline>("scale")
-                    .WithDescription("Scales Kubernetes deployment replicas");
+                    .WithDescription("Scales Kubernetes deployment replicas")
+                    .WithExample(new []{"scale", "logeect-stage", "--mode", "oc", "--replicas", "0"})
+                    .WithExample(new []{"scale", "logeect-stage", "--mode", "k3s", "--replicas", "0", "--kubeconfig", "logeect.yml"});
 
                 config.AddCommand<ServiceUptimePipeline>("uptime")
                     .WithDescription("Check if a service is accessible from internet using public URI")
