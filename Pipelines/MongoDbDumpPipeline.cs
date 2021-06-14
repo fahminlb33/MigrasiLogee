@@ -14,7 +14,7 @@ namespace MigrasiLogee.Pipelines
     public class DumpMongoDbSettings : CommandSettings
     {
         [CommandArgument(0, "<PROJECT_NAME>")]
-        [Description("Project name containing deployments to scale")]
+        [Description("Project name containing pods to dump")]
         public string ProjectName { get; set; }
 
         [CommandArgument(1, "<OUTPUT_PATH>")]
@@ -22,7 +22,7 @@ namespace MigrasiLogee.Pipelines
         public string OutputPath { get; set; }
 
         [CommandOption("-p|--prefix <PREFIX>")]
-        [Description("Only process deployment with this prefix. If no prefix is specified, then it will try all deployment in the project")]
+        [Description("Only process pods with this prefix. If no prefix is specified, then it will try all pods in the project")]
         public string Prefix { get; set; }
 
         [CommandOption("--oc <OC_PATH>")]
@@ -60,6 +60,11 @@ namespace MigrasiLogee.Pipelines
             }
 
             settings.OutputPath = Path.GetFullPath(settings.OutputPath);
+
+            if (string.IsNullOrWhiteSpace(settings.Prefix))
+            {
+                AnsiConsole.MarkupLine("[yellow]No prefix is specified, all pods will be dumped.[/]");
+            }
 
             var ocPath = DependencyLocator.WhereExecutable(settings.OcPath, OpenShiftClient.OcExecutableName);
             if (ocPath == null)
@@ -108,7 +113,10 @@ namespace MigrasiLogee.Pipelines
             Directory.CreateDirectory(settings.OutputPath);
 
             AnsiConsole.WriteLine("Discovering pods...");
-            var pods = _oc.GetPodNames().Where(x => x.Contains(settings.Prefix)).ToList();
+            var pods = _oc.GetPodNames()
+                .Where(x => string.IsNullOrWhiteSpace(settings.Prefix) || x.Contains(settings.Prefix))
+                .ToList();
+            
             AnsiConsole.MarkupLine($"Found [yellow]{pods.Count}[/] pods.");
             
             AnsiConsole.WriteLine("Discovering secrets...");
@@ -151,7 +159,7 @@ namespace MigrasiLogee.Pipelines
                             var databases = _mongo.GetDatabaseNames(NetworkHelpers.ForwardedMongoHost, mongoSecret).ToList();
                             foreach (var database in databases.Where(database => !MongoClient.IsInternalDatabase(database)))
                             {
-                                var statusMarkup = "";
+                                string statusMarkup;
                                 try
                                 {
                                     _mongo.DumpDatabase(NetworkHelpers.ForwardedMongoHost, mongoSecret, database, settings.OutputPath);
@@ -159,7 +167,7 @@ namespace MigrasiLogee.Pipelines
                                 }
                                 catch (Exception e)
                                 {
-                                    statusMarkup = $"[red]Error: {e.Message.TrimLength(20)}[/]";
+                                    statusMarkup = $"[red]{e.Message.TrimLength(20)}[/]";
                                 }
 
                                 table.AddRow(pod, database, statusMarkup);
