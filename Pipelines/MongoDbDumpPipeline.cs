@@ -151,7 +151,7 @@ namespace MigrasiLogee.Pipelines
 
                             if (!isMongoUp)
                             {
-                                table.AddRow(pod, "Can't port-forward or access database.", "", "[yellow]Idk[/]");
+                                table.AddRow(pod, "Can't port-forward or access database.", "[yellow]Idk[/]");
                                 job.StopJob();
                                 continue;
                             }

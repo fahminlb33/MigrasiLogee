@@ -134,22 +134,23 @@ namespace MigrasiLogee.Pipelines
                     {
                         var result = _curl.GetServiceUptime(new ServiceInfo(entry.UseHttps, entry.HostName, entry.Path));
 
-                        var ipMarkup = result.Ip.Contains("not resolve")
+                        var ipMarkup = result.Ip.Contains("resolve")
                             ? $"[red]{result.Ip}[/]"
                             : result.Ip;
-                        var sslMarkup = result.SslStatus.Contains("problem") || result.SslStatus.Contains("No SSL")
+                        var sslMarkup = result.SslStatus.Contains("problem") || result.SslStatus.Contains("No SSL") || result.Ip.Contains("resolve")
                             ? $"[red]{result.SslStatus}[/]"
-                            : result.SslStatus;
+                            : "[green]OK[/]";
                         var httpMarkup = result.HttpCode.Contains("200")
                             ? $"[green]{result.HttpCode}[/]"
                             : $"[red]{result.HttpCode}[/]";
 
-                        table.AddRow(result.Host.TrimLength(20),
+                        table.AddRow(result.Host.TrimLength(),
                             ipMarkup,
                             result.Port.ToString(),
-                            result.Path, sslMarkup,
+                            result.Path, 
+                            sslMarkup,
                             httpMarkup,
-                            result.Body.Replace(Environment.NewLine, "").TrimLength(),
+                            result.Body.TrimLengthFlatten(20),
                             $"{entry.IngressName} ({entry.ProjectName})");
                         ctx.Refresh();
                     }

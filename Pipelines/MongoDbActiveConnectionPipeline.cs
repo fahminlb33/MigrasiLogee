@@ -90,8 +90,10 @@ namespace MigrasiLogee.Pipelines
                     {
                         table.AddColumn("Pod");
                         table.AddColumn("Database");
-                        table.AddColumn("Active Connections");
-                        table.AddColumn("Safe to Scale Down?");
+                        table.AddColumn("Current");
+                        table.AddColumn("Available");
+                        table.AddColumn("Active");
+                        table.AddColumn("Safe to Scale?");
                         ctx.Refresh();
 
                         foreach (var pod in pods)
@@ -113,7 +115,7 @@ namespace MigrasiLogee.Pipelines
 
                             if (!isMongoUp)
                             {
-                                table.AddRow(pod, "Can't port-forward or access database.", "", "[yellow]Idk[/]");
+                                table.AddRow(pod, "Can't port-forward or access database.", "", "", "", "[yellow]Idk[/]");
                                 job.StopJob();
                                 continue;
                             }
@@ -121,11 +123,11 @@ namespace MigrasiLogee.Pipelines
                             var databases = _mongo.GetDatabaseNames(NetworkHelpers.ForwardedMongoHost, mongoSecret).ToList();
                             foreach (var database in databases.Where(database => !MongoClient.IsInternalDatabase(database)))
                             {
-                                var connectionCount = _mongo.GetActiveConnections(NetworkHelpers.ForwardedMongoHost, mongoSecret, database);
-                                var safeToScaleMarkup = connectionCount == 0
+                                var connections = _mongo.GetConnections(NetworkHelpers.ForwardedMongoHost, mongoSecret, database);
+                                var safeToScaleMarkup = connections.Active <= 1
                                     ? "[green]Yes[/]"
                                     : "[red]No[/]";
-                                table.AddRow(pod, database, connectionCount.ToString(), safeToScaleMarkup);
+                                table.AddRow(pod, database, connections.Current.ToString(), connections.Available.ToString(), connections.Active.ToString(), safeToScaleMarkup);
                                 ctx.Refresh();
                             }
 

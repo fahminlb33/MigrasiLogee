@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -64,9 +65,9 @@ namespace MigrasiLogee.Pipelines
                 return false;
             }
 
-            if (!string.IsNullOrWhiteSpace(settings.CnameAddress))
+            if (string.IsNullOrWhiteSpace(settings.CnameAddress))
             {
-                AnsiConsole.MarkupLine("[red]The specified IP in A record is invalid.[/]");
+                AnsiConsole.MarkupLine("[red]The specified URI in CNAME record is invalid.[/]");
                 return false;
             }
 
@@ -104,6 +105,7 @@ namespace MigrasiLogee.Pipelines
                 .Start(ctx =>
                 {
                     table.AddColumn("Host");
+                    table.AddColumn("Source");
                     table.AddColumn("Resolved IP");
                     table.AddColumn("TTL");
                     table.AddColumn("Propagated?");
@@ -113,28 +115,29 @@ namespace MigrasiLogee.Pipelines
                     foreach (var entry in records)
                     {
                         var result = _digClient.ResolveDnsPropagation(entry.Hostname);
-                        var record = result.Records.LastOrDefault();
-
-                        if (record == null)
+                        if (!result.Records.Any())
                         {
-                            table.AddRow(
-                                result.Host.TrimLength(20),
-                                "No answer from NS",
-                                "",
-                                "[red]No[/]",
-                                entry.IngressName);
+                            table.AddRow(result.Host, "No answer from NS", "", "", "[red]No[/]", entry.IngressName);
+                            continue;
                         }
-                        else
+
+                        var displayedHosts = new List<string>();
+                        foreach (var record in result.Records)
                         {
                             var propagated = GetPropagationStatus(result, settings);
                             var propagationMarkup = propagated ? "[green]Yes[/]" : "[red]No[/]";
+                            string hostMarkup;
+                            if (displayedHosts.All(x => x != result.Host))
+                            {
+                                hostMarkup = result.Host;
+                                displayedHosts.Add(result.Host);
+                            }
+                            else
+                            {
+                                hostMarkup = "";
+                            }
 
-                            table.AddRow(
-                                result.Host.TrimLength(20),
-                                record.Destination,
-                                record.Ttl.ToString(),
-                                propagationMarkup,
-                                entry.IngressName);
+                            table.AddRow(hostMarkup, record.Source, record.Destination, record.Ttl.ToString(), propagationMarkup, $"{entry.IngressName} ({entry.ProjectName})");
                         }
 
                         ctx.Refresh();
