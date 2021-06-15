@@ -1,4 +1,6 @@
-﻿namespace MigrasiLogee.Helpers
+﻿using System;
+
+namespace MigrasiLogee.Helpers
 {
     public static class StringHelpers
     {
@@ -11,6 +13,17 @@
                 return "";
             }
 
+            return s.Length <= maxLength ? s : s.Substring(0, maxLength) + "...";
+        }
+
+        public static string TrimLengthFlatten(this string s, int maxLength = 30)
+        {
+            if (string.IsNullOrEmpty(s))
+            {
+                return "";
+            }
+
+            s = s.Replace(Environment.NewLine, "");
             return s.Length <= maxLength ? s : s.Substring(0, maxLength) + "...";
         }
 
