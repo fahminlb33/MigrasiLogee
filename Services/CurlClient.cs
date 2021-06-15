@@ -35,7 +35,7 @@ namespace MigrasiLogee.Services
             using var job = new ProcessJob
             {
                 ExecutableName = CurlExecutablePath,
-                Arguments = $"--dns-servers {DnsAddress} google.com"
+                Arguments = "--dns-servers 8.8.8.8 google.com"
             };
 
             var result = job.StartWaitWithRedirect();
@@ -81,7 +81,7 @@ namespace MigrasiLogee.Services
             {
                 return new ServiceUptime(
                     info.HostName,
-                    "Could not resolve host",
+                    "Can't resolve host",
                     info.Path,
                     0,
                     "",

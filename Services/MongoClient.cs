@@ -11,6 +11,30 @@ namespace MigrasiLogee.Services
 
     public record MongoCollectionStatistics(int DocumentSize, int AverageDocumentSize, int CollectionSize);
 
+    public class MongoConnectionStatistics
+    {
+        [JsonProperty("current")]
+        public long Current { get; set; }
+
+        [JsonProperty("available")]
+        public long Available { get; set; }
+
+        [JsonProperty("totalCreated")]
+        public long TotalCreated { get; set; }
+
+        [JsonProperty("active")]
+        public long Active { get; set; }
+
+        [JsonProperty("exhaustIsMaster")]
+        public long ExhaustIsMaster { get; set; }
+
+        [JsonProperty("exhaustHello")]
+        public long ExhaustHello { get; set; }
+
+        [JsonProperty("awaitingTopologyChanges")]
+        public long AwaitingTopologyChanges { get; set; }
+    }
+
     public class MongoClient
     {
         public const string MongoExecutableName = "mongo";
@@ -105,23 +129,23 @@ namespace MigrasiLogee.Services
 
             var documentSize = StringHelpers.ParseInt(documentSizeOutput);
             var collectionSize = StringHelpers.ParseInt(collectionSizeOutput);
-            var avgDocumentSize = collectionSize / StringHelpers.ParseInt(documentCountOutput);
+            var avgDocumentSize = collectionSize == 0 ? 0 : collectionSize / StringHelpers.ParseInt(documentCountOutput);
 
             return new(documentSize, avgDocumentSize, collectionSize);
         }
 
-        public int GetActiveConnections(string host, MongoSecret secret, string databaseName)
+        public MongoConnectionStatistics GetConnections(string host, MongoSecret secret, string databaseName)
         {
             using var process = new ProcessJob
             {
                 ExecutableName = MongoExecutable,
-                Arguments = BuildMongoCommand(host, databaseName, AdminUser, secret.AdminPassword, AdminDatabase, "db.serverStatus().connections.active")
+                Arguments = BuildMongoCommand(host, databaseName, AdminUser, secret.AdminPassword, AdminDatabase, "db.serverStatus().connections")
             };
 
             var (standardOutput, _, _) = process.StartWaitWithRedirect();
             ValidateOutput(standardOutput);
 
-            return int.Parse(standardOutput);
+            return JsonConvert.DeserializeObject<MongoConnectionStatistics>(standardOutput);
         }
 
         public void DumpDatabase(string host, MongoSecret secret, string databaseName, string outputPath)
