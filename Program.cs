@@ -1,5 +1,4 @@
-﻿
-using MigrasiLogee.Pipelines;
+﻿using MigrasiLogee.Pipelines;
 using Spectre.Console;
 using Spectre.Console.Cli;
 #if DEBUG
