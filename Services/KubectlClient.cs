@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using MigrasiLogee.Exceptions;
 using MigrasiLogee.Helpers;
 using MigrasiLogee.Infrastructure;
@@ -19,7 +20,7 @@ namespace MigrasiLogee.Services
         {
             using var process = new ProcessJob
             {
-                ExecutableName = KubectlExecutableName,
+                ExecutableName = KubectlExecutable,
                 Arguments = $"--kubeconfig \"{KubeconfigFilePath}\" -n {NamespaceName} get deployment -o name"
             };
 
@@ -44,6 +45,22 @@ namespace MigrasiLogee.Services
             ValidateOutput(error);
 
             return output.Contains("scaled");
+        }
+
+        public ProcessJob PortForward(string podName, int localPort, int remotePort)
+        {
+            var process = new ProcessJob
+            {
+                ExecutableName = KubectlExecutable,
+                Arguments = $"--kubeconfig \"{KubeconfigFilePath}\" -n {NamespaceName} port-forward {podName} {localPort}:{remotePort}"
+            };
+
+            process.StartJob();
+
+            Thread.Sleep(2000);
+            process.EnsureStarted();
+
+            return process;
         }
 
         private static void ValidateOutput(string output)

@@ -13,6 +13,11 @@ namespace MigrasiLogee.Infrastructure
             return !string.IsNullOrWhiteSpace(path) && File.Exists(path);
         }
 
+        public static bool IsDirectoryExists(string path)
+        {
+            return !string.IsNullOrWhiteSpace(path) && Directory.Exists(path);
+        }
+
         public static string? WhereExecutable(string suppliedPath, string executableName)
         {
             if (File.Exists(suppliedPath))
