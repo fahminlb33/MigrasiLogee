@@ -6,7 +6,7 @@ This tool is a set of scripts used to help the discovery step and cutover step
 in the process of migrating services off from VSAN to Flou Cloud. This tool is
 created using .NET 5 so this tool can be run from most OSes.
 
-This tool consist of six main pipelines:
+Available scripts:
 
 - **scale**, used to bulk scale deployment replicas in OpenShift or K3s (up/down pods).
 - **dns-propagation**, used to check DNS propagation from Ingress config using `dig`
@@ -16,6 +16,7 @@ This tool consist of six main pipelines:
 - **mongo-size**, get the total database size for all MongoDB instances in OpenShift.
 - **mongo-connection**, get the total connection to MongoDB instances in OpenShift.
 - **mongo-dump**, dump all MongoDB database instances in OpenShift.
+- **kafka-replicas**, reassign all topics in Kafka to 2 partitions and 2 replicas (partition 0 = broker replica 1 and 2; partition 1 = broker replica 2 and 3).
 
 For more information and additional examples, see this [Documentation](https://docs.google.com/document/d/1OkI_4D7qvCb4C3my7KNeFEaZsQRF8XV5PlcDmZ0ZGyg/edit)
 
