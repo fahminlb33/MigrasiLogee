@@ -13,6 +13,7 @@ Available scripts:
   internally.
 - **uptime**, checks whether a service is accessible from external URL, using a static
   IP or DNS resolver.
+- **mongo-primary**, check if the forwarder is forwarding mongo to master node, if not, then change the forwarder to master.
 - **mongo-size**, get the total database size for all MongoDB instances in OpenShift.
 - **mongo-connection**, get the total connection to MongoDB instances in OpenShift.
 - **mongo-dump**, dump all MongoDB database instances in OpenShift.
