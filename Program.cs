@@ -34,6 +34,10 @@ namespace MigrasiLogee
                     .WithExample(new[] { "uptime", "ingress-urls.csv", "-m", "static", "-i", "69.69.69.69" })
                     .WithExample(new[] { "uptime", "ingress-urls.csv", "-m", "dynamic", "-d", "8.8.8.8" });
 
+                config.AddCommand<ChangeMongoPrimaryForwarderPipeline>("mongo-primary")
+                    .WithDescription("Check if the MongoDB forwarder is connected to master, if not then update the forwarder to connect to master")
+                    .WithExample(new[] { "mongo-primary", "logee-prod", "mongo-forwarder" });
+
                 config.AddCommand<MongoDbSizePipeline>("mongo-size")
                     .WithDescription("Calculate MongoDB database size")
                     .WithExample(new[] { "mongo-size", "logee-prod", "mongos.csv", "-p", "mongo" });
