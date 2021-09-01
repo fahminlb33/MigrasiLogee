@@ -1,39 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MigrasiLogee.Exceptions;
 using MigrasiLogee.Helpers;
 using MigrasiLogee.Infrastructure;
+using MigrasiLogee.Models;
 using Newtonsoft.Json;
+using Spectre.Console;
 
 namespace MigrasiLogee.Services
 {
     public record MongoSecret(string Username, string Password, string AdminPassword);
 
     public record MongoCollectionStatistics(int DocumentSize, int AverageDocumentSize, int CollectionSize);
-
-    public class MongoConnectionStatistics
-    {
-        [JsonProperty("current")]
-        public long Current { get; set; }
-
-        [JsonProperty("available")]
-        public long Available { get; set; }
-
-        [JsonProperty("totalCreated")]
-        public long TotalCreated { get; set; }
-
-        [JsonProperty("active")]
-        public long Active { get; set; }
-
-        [JsonProperty("exhaustIsMaster")]
-        public long ExhaustIsMaster { get; set; }
-
-        [JsonProperty("exhaustHello")]
-        public long ExhaustHello { get; set; }
-
-        [JsonProperty("awaitingTopologyChanges")]
-        public long AwaitingTopologyChanges { get; set; }
-    }
 
     public class MongoClient
     {
@@ -67,6 +46,26 @@ namespace MigrasiLogee.Services
 
             var (_, _, exitCode) = process.StartWaitWithRedirect();
             return exitCode == 0;
+        }
+
+        public MongoClusterInfo GetClusterInfo(string host)
+        {
+            using var process = new ProcessJob
+            {
+                ExecutableName = MongoExecutable,
+                Arguments = $"--host {host} --quiet --eval \"JSON.stringify(db.runCommand('ismaster'))\""
+            };
+
+            var (standardOutput, _, _) = process.StartWaitWithRedirect();
+            try
+            {
+                return JsonConvert.DeserializeObject<MongoClusterInfo>(standardOutput);
+            }
+            catch (Exception e)
+            {
+                AnsiConsole.WriteException(e);
+                return null;
+            }
         }
 
         public IEnumerable<string> GetDatabaseNames(string host, MongoSecret secret)
