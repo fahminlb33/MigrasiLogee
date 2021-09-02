@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Linq;
 using System.Threading;
 using MigrasiLogee.Helpers;
 using MigrasiLogee.Infrastructure;
@@ -122,7 +123,7 @@ namespace MigrasiLogee.Pipelines
             // update deployment secret
             AnsiConsole.WriteLine("Updating secret...");
             var secret = _kubectl.GetSecret(settings.DeploymentName);
-            secret["SOCAT_FORWARD_IP"] = clusterInfo.Primary;
+            secret["SOCAT_FORWARD_IP"] = clusterInfo.Primary.Split(':').First();
 
             _kubectl.UpdateSecret(settings.DeploymentName, secret);
 
